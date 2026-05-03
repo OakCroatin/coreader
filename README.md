@@ -80,3 +80,4 @@ coreader/
 ├── session.py       # Dialogue loop and rolling summary
 └── synthesizer.py   # Cross-book synthesis
 ```
+# coreader
