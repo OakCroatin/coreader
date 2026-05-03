@@ -120,7 +120,10 @@ def create_app(conn=None) -> FastAPI:
         rolling_summary = progress["rolling_summary"] if progress else ""
 
         if session_type == "checkin":
-            chapter_num = int(chapter)
+            try:
+                chapter_num = int(chapter)
+            except ValueError:
+                return HTMLResponse("Invalid chapter number", status_code=400)
             ch = get_chapter(c, book_id, chapter_num)
             if not ch:
                 return HTMLResponse(f"Chapter {chapter_num} not found", status_code=404)
