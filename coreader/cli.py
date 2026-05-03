@@ -28,7 +28,16 @@ def cli():
 @cli.command()
 @click.argument("file", type=click.Path(path_type=Path))
 def add(file: Path):
-    """Ingest an EPUB or PDF book. Drop books in ~/.coreader/books/ and pass the filename."""
+    """Ingest an EPUB or PDF book.
+
+    Drop the file into the books/ folder inside the project, then pass just
+    the filename. Or pass a full path to any file on your system.
+
+    \b
+    Examples:
+      coreader add mybook.epub
+      coreader add /home/user/downloads/mybook.pdf
+    """
     if not file.is_absolute() and not file.exists():
         file = BOOKS_DIR / file
     if not file.exists():
@@ -60,7 +69,15 @@ def add(file: Path):
 @cli.command()
 @click.argument("title")
 def remove(title: str):
-    """Remove a book and all its sessions from the database."""
+    """Remove a book and all its sessions from the database.
+
+    Deletes the book, all chapters, progress, and session history.
+    You will be asked to confirm before anything is deleted.
+
+    \b
+    Example:
+      coreader remove "No Nonsense Spirituality"
+    """
     conn = get_connection()
     init_db(conn)
 
@@ -78,7 +95,15 @@ def remove(title: str):
 @click.argument("title")
 @click.argument("chapter", type=int)
 def checkin(title: str, chapter: int):
-    """Start an interactive dialogue after finishing a chapter."""
+    """Start an interactive Socratic dialogue after finishing a chapter.
+
+    Ask evaluative questions about the chapter. Type 'done' to end the session.
+    The rolling summary updates automatically when you finish.
+
+    \b
+    Example:
+      coreader checkin "No Nonsense Spirituality" 7
+    """
     conn = get_connection()
     init_db(conn)
 
@@ -99,7 +124,12 @@ def checkin(title: str, chapter: int):
 @cli.command()
 @click.argument("title")
 def compare(title: str):
-    """Run cross-book synthesis dialogue for a book."""
+    """Surface connections between a book and everything else you've read.
+
+    \b
+    Example:
+      coreader compare "No Nonsense Spirituality"
+    """
     conn = get_connection()
     init_db(conn)
 
@@ -113,7 +143,7 @@ def compare(title: str):
 
 @cli.command()
 def status():
-    """Show all books and reading progress."""
+    """Show all books, chapter progress, and last check-in date."""
     conn = get_connection()
     init_db(conn)
 
