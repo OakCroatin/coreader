@@ -1,3 +1,16 @@
+"""
+cli.py — Command-line interface for Co-Reader.
+
+Defines five commands:
+  add     — ingest an EPUB or PDF from the books/ folder or a full path
+  remove  — delete a book and all its sessions from the database
+  checkin — start a Socratic dialogue after finishing a chapter
+  compare — run a cross-book synthesis session
+  status  — display all books and reading progress
+
+The ASCII banner is printed on every command invocation via the cli() group.
+"""
+
 import click
 from pathlib import Path
 from coreader.config import ensure_dirs, BOOKS_DIR
