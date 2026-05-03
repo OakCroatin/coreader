@@ -62,3 +62,32 @@ def test_start_compare_session_redirects_to_chat(client):
         }, follow_redirects=False)
     assert response.status_code in (302, 303)
     assert "/session/" in response.headers["location"]
+
+
+def test_chat_page_returns_200(client):
+    """Seed an active session manually and verify the chat page loads."""
+    c, book_id = client
+    with patch("coreader.web.chat", return_value="Opening question."):
+        r = c.post("/session/start", data={
+            "book_id": book_id, "session_type": "checkin", "chapter": "1"
+        }, follow_redirects=True)
+    assert r.status_code == 200
+    assert "Opening question." in r.text
+
+
+def test_send_message_returns_json(client):
+    c, book_id = client
+    with patch("coreader.web.chat", return_value="Opening question."):
+        c.post("/session/start", data={
+            "book_id": book_id, "session_type": "checkin", "chapter": "1"
+        }, follow_redirects=True)
+    # Find the session_id from active_sessions
+    from coreader.web import active_sessions
+    session_id = list(active_sessions.keys())[-1]
+
+    with patch("coreader.web.chat", return_value="Interesting point."):
+        r = c.post(f"/session/{session_id}/message", json={"content": "I think it matters."})
+    assert r.status_code == 200
+    data = r.json()
+    assert data["role"] == "assistant"
+    assert "Interesting point." in data["content"]

@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Co-Reader — Session</title>
+</head>
+<body>
+  <div id="header">
+    <span>{{ book["title"] if book else "Session" }}</span>
+    {% if session_type == "checkin" %}<span>Chapter {{ chapter }} · Check-in</span>{% else %}<span>Compare</span>{% endif %}
+    <button id="done-btn">Done</button>
+  </div>
+
+  <div id="messages">
+    {% for ex in exchanges %}
+    <div class="msg {{ ex.role }}">{{ ex.content }}</div>
+    {% endfor %}
+  </div>
+
+  <div id="input-area">
+    <input id="msg-input" type="text" placeholder="Your response..." autocomplete="off">
+    <button id="send-btn">Send</button>
+  </div>
+
+  <script>
+    const SESSION_ID = {{ session_id }};
+
+    async function sendMessage() {
+      const input = document.getElementById('msg-input');
+      const content = input.value.trim();
+      if (!content) return;
+      input.value = '';
+
+      appendMessage('user', content);
+
+      const res = await fetch(`/session/${SESSION_ID}/message`, {
+        method: 'POST',
+        headers: {'Content-Type': 'application/json'},
+        body: JSON.stringify({content}),
+      });
+      const data = await res.json();
+      appendMessage('assistant', data.content);
+    }
+
+    function appendMessage(role, content) {
+      const div = document.createElement('div');
+      div.className = `msg ${role}`;
+      div.textContent = content;
+      document.getElementById('messages').appendChild(div);
+      div.scrollIntoView();
+    }
+
+    document.getElementById('send-btn').addEventListener('click', sendMessage);
+    document.getElementById('msg-input').addEventListener('keydown', e => {
+      if (e.key === 'Enter') sendMessage();
+    });
+
+    document.getElementById('done-btn').addEventListener('click', async () => {
+      await fetch(`/session/${SESSION_ID}/done`, {method: 'POST'});
+      window.location.href = '/';
+    });
+  </script>
+</body>
+</html>

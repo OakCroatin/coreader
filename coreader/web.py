@@ -163,4 +163,58 @@ def create_app(conn=None) -> FastAPI:
 
         return RedirectResponse(url=f"/session/{session_id}", status_code=303)
 
+    @app.get("/session/{session_id}", response_class=HTMLResponse)
+    async def chat_view(request: Request, session_id: int):
+        """Chat page — loads existing exchanges and renders the chat UI."""
+        c = get_conn()
+        exchanges = get_exchanges(c, session_id)
+        session_row = c.execute("SELECT * FROM sessions WHERE id=?", (session_id,)).fetchone()
+        if not session_row:
+            return HTMLResponse("Session not found", status_code=404)
+        books = list_books(c)
+        book = next((b for b in books if b["id"] == session_row["book_id"]), None)
+        return templates.TemplateResponse(request, "chat.html", {
+            "session_id": session_id,
+            "session_type": session_row["type"],
+            "chapter": session_row["chapter"],
+            "book": book,
+            "exchanges": [{"role": e["role"], "content": e["content"]} for e in exchanges],
+        })
+
+    @app.post("/session/{session_id}/message")
+    async def send_message(session_id: int, request: Request):
+        """Receive a user message, call Ollama, return assistant response as JSON."""
+        body = await request.json()
+        user_content = body.get("content", "").strip()
+        if not user_content:
+            return JSONResponse({"error": "empty message"}, status_code=400)
+
+        c = get_conn()
+        messages = active_sessions.get(session_id)
+        if messages is None:
+            # Reconstruct from DB if server was restarted
+            session_row = c.execute("SELECT * FROM sessions WHERE id=?", (session_id,)).fetchone()
+            if not session_row:
+                return JSONResponse({"error": "session not found"}, status_code=404)
+            exchanges = get_exchanges(c, session_id)
+            messages = [{"role": e["role"], "content": e["content"]} for e in exchanges]
+            active_sessions[session_id] = messages
+
+        # Determine next seq number
+        seq = c.execute("SELECT COUNT(*) FROM exchanges WHERE session_id=?", (session_id,)).fetchone()[0] + 1
+
+        # Save and append user turn
+        add_exchange(c, session_id=session_id, role="user", content=user_content, seq=seq)
+        messages.append({"role": "user", "content": user_content})
+        seq += 1
+
+        # Call Ollama (buffered)
+        response_text = chat(messages)
+
+        # Save and append assistant turn
+        add_exchange(c, session_id=session_id, role="assistant", content=response_text, seq=seq)
+        messages.append({"role": "assistant", "content": response_text})
+
+        return JSONResponse({"role": "assistant", "content": response_text})
+
     return app
