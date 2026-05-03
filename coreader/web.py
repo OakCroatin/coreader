@@ -89,4 +89,75 @@ def create_app(conn=None) -> FastAPI:
             "books": book_data,
         })
 
+    @app.get("/session/new/{book_id}", response_class=HTMLResponse)
+    async def new_session_form(request: Request, book_id: int):
+        """Form page to choose checkin (with chapter number) or compare."""
+        c = get_conn()
+        books = list_books(c)
+        book = next((b for b in books if b["id"] == book_id), None)
+        if not book:
+            return HTMLResponse("Book not found", status_code=404)
+        total = get_chapter_count(c, book_id)
+        return templates.TemplateResponse(request, "new_session.html", {
+            "book": book,
+            "total_chapters": total,
+        })
+
+    @app.post("/session/start")
+    async def start_session(
+        book_id: int = Form(...),
+        session_type: str = Form(...),
+        chapter: str = Form(""),
+    ):
+        """Create a new session, build the opening message, store in memory, redirect to chat."""
+        c = get_conn()
+        books = list_books(c)
+        book = next((b for b in books if b["id"] == book_id), None)
+        if not book:
+            return HTMLResponse("Book not found", status_code=404)
+
+        progress = get_progress(c, book_id)
+        rolling_summary = progress["rolling_summary"] if progress else ""
+
+        if session_type == "checkin":
+            chapter_num = int(chapter)
+            ch = get_chapter(c, book_id, chapter_num)
+            if not ch:
+                return HTMLResponse(f"Chapter {chapter_num} not found", status_code=404)
+            system_prompt = build_checkin_prompt(
+                book_type=book["type"],
+                title=book["title"],
+                chapter_number=chapter_num,
+                chapter_text=ch["text"],
+                rolling_summary=rolling_summary,
+            )
+            session_id = add_session(c, book_id=book_id, chapter=chapter_num, session_type="checkin")
+        else:
+            # compare session — gather other books' summaries
+            all_books = list_books(c)
+            other_books = []
+            for b in all_books:
+                if b["id"] == book_id:
+                    continue
+                p = get_progress(c, b["id"])
+                if p and p["rolling_summary"]:
+                    other_books.append({"title": b["title"], "summary": p["rolling_summary"]})
+            system_prompt = build_synthesis_prompt(
+                current_title=book["title"],
+                current_summary=rolling_summary,
+                other_books=other_books,
+            )
+            session_id = add_session(c, book_id=book_id, chapter=None, session_type="compare")
+
+        # Build initial message history and get opening question
+        messages = [{"role": "system", "content": system_prompt}]
+        opening = chat(messages)
+        messages.append({"role": "assistant", "content": opening})
+        add_exchange(c, session_id=session_id, role="assistant", content=opening, seq=1)
+
+        # Store conversation history in memory for subsequent turns
+        active_sessions[session_id] = messages
+
+        return RedirectResponse(url=f"/session/{session_id}", status_code=303)
+
     return app

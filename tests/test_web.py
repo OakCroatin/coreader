@@ -1,5 +1,6 @@
 import sqlite3
 import pytest
+from unittest.mock import patch
 from fastapi.testclient import TestClient
 from coreader.db import init_db, add_book, add_chapter, get_connection
 from coreader.web import create_app
@@ -30,3 +31,34 @@ def test_library_page_returns_200(client):
     response = c.get("/")
     assert response.status_code == 200
     assert "Dune" in response.text
+
+
+def test_new_session_form_returns_200(client):
+    c, book_id = client
+    response = c.get(f"/session/new/{book_id}")
+    assert response.status_code == 200
+    assert "Dune" in response.text
+
+
+def test_start_checkin_session_redirects_to_chat(client):
+    c, book_id = client
+    with patch("coreader.web.chat", return_value="What do you think?"):
+        response = c.post("/session/start", data={
+            "book_id": book_id,
+            "session_type": "checkin",
+            "chapter": "1",
+        }, follow_redirects=False)
+    assert response.status_code in (302, 303)
+    assert "/session/" in response.headers["location"]
+
+
+def test_start_compare_session_redirects_to_chat(client):
+    c, book_id = client
+    with patch("coreader.web.chat", return_value="Here is a connection."):
+        response = c.post("/session/start", data={
+            "book_id": book_id,
+            "session_type": "compare",
+            "chapter": "",
+        }, follow_redirects=False)
+    assert response.status_code in (302, 303)
+    assert "/session/" in response.headers["location"]

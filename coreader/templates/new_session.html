@@ -1,0 +1,20 @@
+<!DOCTYPE html>
+<html lang="en">
+<head><meta charset="UTF-8"><title>Start Session — Co-Reader</title></head>
+<body>
+  <h1>{{ book["title"] }}</h1>
+  <form method="post" action="/session/start">
+    <input type="hidden" name="book_id" value="{{ book['id'] }}">
+    <label>
+      <input type="radio" name="session_type" value="checkin" checked> Check In
+    </label>
+    <label>
+      <input type="radio" name="session_type" value="compare"> Compare
+    </label>
+    <br>
+    <label>Chapter: <input type="number" name="chapter" min="1" max="{{ total_chapters }}" value="1"></label>
+    <br>
+    <button type="submit">Start</button>
+  </form>
+</body>
+</html>
