@@ -3,7 +3,7 @@ from pathlib import Path
 
 COREADER_DIR = Path.home() / ".coreader"
 CONFIG_PATH = COREADER_DIR / "config.toml"
-BOOKS_DIR = COREADER_DIR / "books"
+BOOKS_DIR = Path(__file__).parent.parent / "books"
 DEFAULT_MODEL = "gemma4:e4b"
 
 

@@ -41,7 +41,7 @@ If you see your model listed, it's running. If not, start it with `ollama serve`
 
 ### Add a new book (once per book)
 
-Drop the EPUB or PDF into `~/.coreader/books/`, then:
+Drop the EPUB or PDF into the `books/` folder inside the project (`~/Projects/coreader/books/`), then:
 
 ```bash
 coreader add "my-book.epub"
