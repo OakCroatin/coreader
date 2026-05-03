@@ -1,7 +1,6 @@
 import sqlite3
 import pytest
 from fastapi.testclient import TestClient
-from unittest.mock import patch
 from coreader.db import init_db, add_book, add_chapter, get_connection
 from coreader.web import create_app
 
