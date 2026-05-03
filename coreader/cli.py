@@ -24,8 +24,8 @@ from coreader.synthesizer import run_compare_session
 def _make_banner() -> str:
     """Combine the book stack art and the COREADER title side by side."""
     book = [
-        "              (  ",
-        "             ( ) ",
+        "               (  ",
+        "              ( ) ",
         "     _______   Y  ",
         "    /      /, |\"|",
         "   /      //  | | ",
