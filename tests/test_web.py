@@ -91,3 +91,30 @@ def test_send_message_returns_json(client):
     data = r.json()
     assert data["role"] == "assistant"
     assert "Interesting point." in data["content"]
+
+
+def test_done_checkin_clears_session(client):
+    c, book_id = client
+    with patch("coreader.web.chat", return_value="Opening question."):
+        c.post("/session/start", data={
+            "book_id": book_id, "session_type": "checkin", "chapter": "1"
+        }, follow_redirects=True)
+    from coreader.web import active_sessions
+    session_id = list(active_sessions.keys())[-1]
+
+    with patch("coreader.web.chat", return_value="Great summary."):
+        r = c.post(f"/session/{session_id}/done")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ok"
+    assert session_id not in active_sessions
+
+
+def test_remove_book_deletes_from_db(client):
+    c, book_id = client
+    r = c.delete(f"/books/{book_id}")
+    assert r.status_code == 200
+    assert r.json()["status"] == "ok"
+
+    # Book should no longer appear in library
+    r2 = c.get("/")
+    assert "Dune" not in r2.text

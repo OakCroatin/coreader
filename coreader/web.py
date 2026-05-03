@@ -217,4 +217,48 @@ def create_app(conn=None) -> FastAPI:
 
         return JSONResponse({"role": "assistant", "content": response_text})
 
+    @app.post("/session/{session_id}/done")
+    async def end_session(session_id: int):
+        """End a session. For checkins, generates and saves a rolling summary update."""
+        c = get_conn()
+        session_row = c.execute("SELECT * FROM sessions WHERE id=?", (session_id,)).fetchone()
+        if not session_row:
+            return JSONResponse({"error": "session not found"}, status_code=404)
+
+        if session_row["type"] == "checkin":
+            # Build the summary update from stored exchanges
+            exchanges = get_exchanges(c, session_id)
+            dialogue_text = "\n".join(
+                f"{'Assistant' if e['role'] == 'assistant' else 'User'}: {e['content']}"
+                for e in exchanges
+            )
+            book_id = session_row["book_id"]
+            chapter_num = session_row["chapter"]
+            ch = get_chapter(c, book_id, chapter_num)
+            progress = get_progress(c, book_id)
+            rolling_summary = progress["rolling_summary"] if progress else ""
+            books = list_books(c)
+            book = next((b for b in books if b["id"] == book_id), None)
+
+            summary_prompt = build_summary_update_prompt(
+                title=book["title"],
+                chapter_number=chapter_num,
+                chapter_text=ch["text"] if ch else "",
+                rolling_summary=rolling_summary,
+                dialogue_text=dialogue_text,
+            )
+            new_summary = chat([{"role": "user", "content": summary_prompt}])
+            update_progress(c, book_id=book_id, last_chapter=chapter_num, rolling_summary=new_summary)
+
+        # Clear in-memory session state
+        active_sessions.pop(session_id, None)
+        return JSONResponse({"status": "ok"})
+
+    @app.delete("/books/{book_id}")
+    async def delete_book(book_id: int):
+        """Remove a book and all its data from the database."""
+        c = get_conn()
+        remove_book(c, book_id)
+        return JSONResponse({"status": "ok"})
+
     return app
