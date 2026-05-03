@@ -12,6 +12,7 @@ dependencies = [
     "pypdf>=4.0",
     "ollama>=0.2",
     "beautifulsoup4>=4.12",
+    "tomli-w>=1.0",
 ]
 
 [project.scripts]

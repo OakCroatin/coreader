@@ -7,6 +7,7 @@ paths used across the app.
 """
 
 import tomllib
+import tomli_w
 from pathlib import Path
 
 # ~/.coreader/ — stores the database and config file
@@ -35,3 +36,16 @@ def ensure_dirs():
     """Create ~/.coreader/ and the books/ folder if they don't exist yet."""
     COREADER_DIR.mkdir(exist_ok=True)
     BOOKS_DIR.mkdir(exist_ok=True)
+
+
+def save_model(model: str) -> None:
+    """Write the chosen model name to config.toml, preserving other settings."""
+    ensure_dirs()
+    # Load existing config if present, so we don't overwrite other keys
+    cfg = {}
+    if CONFIG_PATH.exists():
+        with open(CONFIG_PATH, "rb") as f:
+            cfg = tomllib.load(f)
+    cfg["model"] = model
+    with open(CONFIG_PATH, "wb") as f:
+        tomli_w.dump(cfg, f)

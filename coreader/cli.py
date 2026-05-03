@@ -13,7 +13,7 @@ The ASCII banner is printed on every command invocation via the cli() group.
 
 import click
 from pathlib import Path
-from coreader.config import ensure_dirs, BOOKS_DIR
+from coreader.config import ensure_dirs, BOOKS_DIR, load_model, save_model
 from coreader.db import get_connection, init_db, add_book, add_chapter, get_book_by_title, list_books, get_progress, get_chapter_count, remove_book
 from coreader.ingest import extract_chapters
 from coreader.session import run_checkin_session
@@ -182,6 +182,51 @@ def compare(title: str):
         return
 
     run_compare_session(conn=conn, book_id=book["id"], book_title=book["title"])
+
+
+@cli.command()
+def model():
+    """Show available Ollama models and switch the active one.
+
+    Lists all models installed on this machine. Select a number to switch,
+    or press Enter to keep the current model.
+
+    \b
+    Example:
+      coreader model
+    """
+    import ollama as _ollama
+    try:
+        models = [m.model for m in _ollama.list().models]
+    except Exception:
+        click.echo("Could not reach Ollama. Make sure it is running.")
+        return
+
+    if not models:
+        click.echo("No models found. Run 'ollama pull <model>' to install one.")
+        return
+
+    current = load_model()
+    click.echo(f"\nCurrent model: {current}\n")
+    click.echo("Available models:")
+    for i, m in enumerate(models, 1):
+        marker = " <-- active" if m == current else ""
+        click.echo(f"  [{i}] {m}{marker}")
+
+    click.echo()
+    choice = click.prompt("Select a model number (Enter to keep current)", default="", show_default=False)
+
+    if not choice.strip():
+        click.echo("No change.")
+        return
+
+    if not choice.isdigit() or not (1 <= int(choice) <= len(models)):
+        click.echo("Invalid selection.")
+        return
+
+    selected = models[int(choice) - 1]
+    save_model(selected)
+    click.echo(f"Model set to '{selected}'.")
 
 
 @cli.command()
