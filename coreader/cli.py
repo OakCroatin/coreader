@@ -1,5 +1,6 @@
 import click
 from pathlib import Path
+from coreader.config import ensure_dirs, BOOKS_DIR
 from coreader.db import get_connection, init_db, add_book, add_chapter, get_book_by_title, list_books, get_progress, get_chapter_count
 from coreader.ingest import extract_chapters
 from coreader.session import run_checkin_session
@@ -20,13 +21,19 @@ BANNER = r"""
 @click.group()
 def cli():
     """Co-Reader: your interactive reading companion."""
+    ensure_dirs()
     click.echo(BANNER)
 
 
 @cli.command()
-@click.argument("file", type=click.Path(exists=True, path_type=Path))
+@click.argument("file", type=click.Path(path_type=Path))
 def add(file: Path):
-    """Ingest an EPUB or PDF book."""
+    """Ingest an EPUB or PDF book. Drop books in ~/.coreader/books/ and pass the filename."""
+    if not file.is_absolute() and not file.exists():
+        file = BOOKS_DIR / file
+    if not file.exists():
+        click.echo(f"File not found: {file}\nDrop your book into ~/.coreader/books/ and try again.")
+        return
     conn = get_connection()
     init_db(conn)
 

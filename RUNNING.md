@@ -40,9 +40,19 @@ If you see your model listed, it's running. If not, start it with `ollama serve`
 ## Daily workflow
 
 ### Add a new book (once per book)
+
+Drop the EPUB or PDF into `~/.coreader/books/`, then:
+
+```bash
+coreader add "my-book.epub"
+```
+
+You can also pass a full path if you prefer:
+
 ```bash
 coreader add /path/to/book.epub
 ```
+
 You'll be prompted for title, author, and type (fiction or nonfiction).
 
 ### Check in after finishing a chapter
