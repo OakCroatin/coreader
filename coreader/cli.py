@@ -11,6 +11,7 @@ Defines five commands:
 The ASCII banner is printed on every command invocation via the cli() group.
 """
 
+import pyfiglet
 import click
 from pathlib import Path
 from coreader.config import ensure_dirs, BOOKS_DIR, load_model, save_model
@@ -33,13 +34,8 @@ def _make_banner() -> str:
         "(______(//   ('-')",
         "(______(/     `-' ",
     ]
-    title = [
-        "  ____  ___  ____  _____    _    ____  _____  ____",
-        " / ___// _ \\|  _ \\| ____|  / \\  |  _ \\| ____||  _ \\ ",
-        "| |   | | | | |_) |  _|   / _ \\ | | | |  _|  | |_) |",
-        "| |___| |_| |  _ <| |___ / ___ \\| |_| | |___ |  _ < ",
-        " \\____|\\___/ |_| \\_\\_____/_/   \\_\\____/ |_____||_| \\_\\",
-    ]
+    # Generate the title using pyfiglet for pixel-perfect letter alignment
+    title = pyfiglet.figlet_format("COREADER").rstrip("\n").split("\n")
     gap = " " * 10
     book_width = max(len(l) for l in book)
     title_start = 2  # which book row the title begins on
