@@ -6,10 +6,21 @@ from coreader.session import run_checkin_session
 from coreader.synthesizer import run_compare_session
 
 
+BANNER = r"""
+  ____  ___  ____  _____    _    ____  _____  ____
+ / ___// _ \|  _ \| ____|  / \  |  _ \| ____||  _ \
+| |   | | | | |_) |  _|   / _ \ | | | |  _|  | |_) |
+| |___| |_| |  _ <| |___ / ___ \| |_| | |___ |  _ <
+ \____|\___/ |_| \_\_____/_/   \_\____/ |_____||_| \_\
+
+           your reading companion
+"""
+
+
 @click.group()
 def cli():
     """Co-Reader: your interactive reading companion."""
-    pass
+    click.echo(BANNER)
 
 
 @cli.command()

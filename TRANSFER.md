@@ -34,10 +34,12 @@ Requires Python 3.11+. Check with `python3 --version`.
 ```bash
 cd ~/Projects/coreader
 python3 -m venv .venv
-source .venv/bin/activate    # Linux/Mac
+source .venv/bin/activate    # Linux/Mac — must run in bash or zsh (not fish)
 # or: .venv\Scripts\activate  # Windows
 pip install -e .
 ```
+
+> **Linux shell note:** The activate script requires bash or zsh. If you're using fish shell, either switch first (`bash`) or use `.venv/bin/activate.fish`.
 
 ## Step 3: Install and start Ollama
 
@@ -58,11 +60,26 @@ ollama list
 
 ## Step 4: Set the model for this machine
 
-Create `~/.coreader/config.toml` on the target machine with the exact model name shown by `ollama list`:
+First check what models are available on this machine:
+
+```bash
+ollama list
+```
+
+Then create `~/.coreader/config.toml` using the **exact name** shown in that output:
+
+```bash
+mkdir -p ~/.coreader
+echo 'model = "gemma3:27b"' > ~/.coreader/config.toml  # replace with your actual model name
+```
+
+Or as a TOML file:
 
 ```toml
 model = "gemma3:27b"
 ```
+
+> **Important:** The model name must match `ollama list` exactly. A mismatch gives a 404 error on first checkin.
 
 Each machine can have its own `config.toml` pointing to whatever model is available locally. The app code is the same on all machines.
 
