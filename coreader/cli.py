@@ -20,15 +20,45 @@ from coreader.session import run_checkin_session
 from coreader.synthesizer import run_compare_session
 
 
-BANNER = r"""
-  ____  ___  ____  _____    _    ____  _____  ____
- / ___// _ \|  _ \| ____|  / \  |  _ \| ____||  _ \
-| |   | | | | |_) |  _|   / _ \ | | | |  _|  | |_) |
-| |___| |_| |  _ <| |___ / ___ \| |_| | |___ |  _ <
- \____|\___/ |_| \_\_____/_/   \_\____/ |_____||_| \_\
+def _make_banner() -> str:
+    """Combine the book stack art and the COREADER title side by side."""
+    book = [
+        "              (  ",
+        "             ( ) ",
+        "    _______   Y  ",
+        "   /      /, |\"|",
+        "  /      //  | | ",
+        " /______//,  | | ",
+        "(______(//   ,-. ",
+        "(______(//   ('-')",
+        "(______(/     `-' ",
+    ]
+    title = [
+        "  ____  ___  ____  _____    _    ____  _____  ____",
+        " / ___// _ \\|  _ \\| ____|  / \\  |  _ \\| ____||  _ \\ ",
+        "| |   | | | | |_) |  _|   / _ \\ | | | |  _|  | |_) |",
+        "| |___| |_| |  _ <| |___ / ___ \\| |_| | |___ |  _ < ",
+        " \\____|\\___/ |_| \\_\\_____/_/   \\_\\____/ |_____||_| \\_\\",
+    ]
+    gap = " " * 10
+    book_width = max(len(l) for l in book)
+    title_start = 2  # which book row the title begins on
 
-           your reading companion
-"""
+    lines = [""]
+    for i, book_line in enumerate(book):
+        ti = i - title_start
+        padded = book_line.ljust(book_width)
+        if 0 <= ti < len(title):
+            lines.append(padded + gap + title[ti])
+        else:
+            lines.append(padded)
+    lines.append("")
+    lines.append(" " * (book_width + len(gap)) + "your reading companion")
+    lines.append("")
+    return "\n".join(lines)
+
+
+BANNER = _make_banner()
 
 
 @click.group()
