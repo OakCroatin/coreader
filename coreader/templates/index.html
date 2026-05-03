@@ -2,12 +2,67 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Co-Reader</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1a0f; color: #d0e8d0; font-family: Georgia, serif; min-height: 100vh; }
+    header { padding: 32px 0 16px; text-align: center; border-bottom: 1px solid #2a3a2a; }
+    header h1 { color: #d4a853; font-size: 2rem; letter-spacing: 0.1em; }
+    header p { color: #5a7a5a; font-size: 0.9rem; margin-top: 4px; }
+    main { max-width: 640px; margin: 40px auto; padding: 0 20px; }
+    .book-row {
+      background: #152018; border-radius: 8px; padding: 16px 20px;
+      margin-bottom: 12px; display: flex; justify-content: space-between; align-items: center;
+    }
+    .book-info h2 { font-size: 1rem; color: #d0e8d0; }
+    .book-info p { font-size: 0.82rem; color: #5a7a5a; margin-top: 3px; }
+    .book-actions { display: flex; gap: 8px; }
+    .btn {
+      padding: 6px 14px; border-radius: 4px; font-size: 0.82rem;
+      cursor: pointer; border: none; text-decoration: none; display: inline-block;
+    }
+    .btn-primary { background: #d4a853; color: #0d1a0f; font-weight: bold; }
+    .btn-danger { background: transparent; color: #7a4a4a; border: 1px solid #5a3a3a; }
+    .empty { text-align: center; color: #5a7a5a; margin-top: 60px; font-size: 0.95rem; }
+    .progress-bar { height: 3px; background: #2a3a2a; border-radius: 2px; margin-top: 6px; width: 120px; }
+    .progress-fill { height: 100%; background: #d4a853; border-radius: 2px; }
+  </style>
 </head>
 <body>
-  <h1>Co-Reader</h1>
-  {% for book in books %}
-    <p>{{ book.title }}</p>
-  {% endfor %}
+  <header>
+    <h1>Co-Reader</h1>
+    <p>your reading companion</p>
+  </header>
+  <main>
+    {% if books %}
+      {% for book in books %}
+      <div class="book-row">
+        <div class="book-info">
+          <h2>{{ book.title }}</h2>
+          <p>{{ book.author }} · {{ book.type }} · Ch {{ book.last_chapter }}/{{ book.total_chapters }} · {{ book.last_checkin }}</p>
+          {% if book.total_chapters > 0 %}
+          <div class="progress-bar">
+            <div class="progress-fill" style="width: {{ (book.last_chapter / book.total_chapters * 100)|int }}%"></div>
+          </div>
+          {% endif %}
+        </div>
+        <div class="book-actions">
+          <a href="/session/new/{{ book.id }}" class="btn btn-primary">Start</a>
+          <button class="btn btn-danger" onclick="removeBook({{ book.id }}, '{{ book.title }}')">Remove</button>
+        </div>
+      </div>
+      {% endfor %}
+    {% else %}
+      <p class="empty">No books yet. Run <code>coreader add &lt;file&gt;</code> to add one.</p>
+    {% endif %}
+  </main>
+  <script>
+    async function removeBook(id, title) {
+      if (!confirm(`Remove "${title}" and all its sessions? This cannot be undone.`)) return;
+      await fetch(`/books/${id}`, {method: 'DELETE'});
+      window.location.reload();
+    }
+  </script>
 </body>
 </html>

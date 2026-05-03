@@ -1,20 +1,49 @@
 <!DOCTYPE html>
 <html lang="en">
-<head><meta charset="UTF-8"><title>Start Session — Co-Reader</title></head>
+<head>
+  <meta charset="UTF-8">
+  <title>Start Session — Co-Reader</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { background: #0d1a0f; color: #d0e8d0; font-family: Georgia, serif; min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+    .card { background: #152018; border-radius: 10px; padding: 36px 40px; width: 420px; }
+    h1 { color: #d4a853; font-size: 1.3rem; margin-bottom: 4px; }
+    p.author { color: #5a7a5a; font-size: 0.85rem; margin-bottom: 28px; }
+    .field { margin-bottom: 20px; }
+    label.field-label { display: block; color: #a0c8a0; font-size: 0.85rem; margin-bottom: 8px; }
+    .radio-group { display: flex; gap: 16px; }
+    .radio-group label { display: flex; align-items: center; gap: 6px; cursor: pointer; color: #d0e8d0; font-size: 0.95rem; }
+    input[type="number"] { background: #0d1a0f; border: 1px solid #2a4a2a; border-radius: 4px; padding: 8px 12px; color: #d0e8d0; font-size: 0.95rem; width: 80px; }
+    button[type="submit"] { width: 100%; padding: 12px; background: #d4a853; color: #0d1a0f; font-weight: bold; border: none; border-radius: 6px; font-size: 1rem; cursor: pointer; margin-top: 8px; }
+    a.back { color: #5a7a5a; font-size: 0.85rem; display: block; text-align: center; margin-top: 16px; text-decoration: none; }
+    a.back:hover { color: #d0e8d0; }
+  </style>
+</head>
 <body>
-  <h1>{{ book["title"] }}</h1>
-  <form method="post" action="/session/start">
-    <input type="hidden" name="book_id" value="{{ book['id'] }}">
-    <label>
-      <input type="radio" name="session_type" value="checkin" checked> Check In
-    </label>
-    <label>
-      <input type="radio" name="session_type" value="compare"> Compare
-    </label>
-    <br>
-    <label>Chapter: <input type="number" name="chapter" min="1" max="{{ total_chapters }}" value="1"></label>
-    <br>
-    <button type="submit">Start</button>
-  </form>
+  <div class="card">
+    <h1>{{ book["title"] }}</h1>
+    <p class="author">{{ book["author"] }}</p>
+    <form method="post" action="/session/start">
+      <input type="hidden" name="book_id" value="{{ book['id'] }}">
+      <div class="field">
+        <label class="field-label">Session type</label>
+        <div class="radio-group">
+          <label><input type="radio" name="session_type" value="checkin" checked onchange="toggleChapter(true)"> Check In</label>
+          <label><input type="radio" name="session_type" value="compare" onchange="toggleChapter(false)"> Compare</label>
+        </div>
+      </div>
+      <div class="field" id="chapter-field">
+        <label class="field-label">Chapter number (1–{{ total_chapters }})</label>
+        <input type="number" name="chapter" min="1" max="{{ total_chapters }}" value="{{ total_chapters }}">
+      </div>
+      <button type="submit">Start Session</button>
+    </form>
+    <a href="/" class="back">← Back to library</a>
+  </div>
+  <script>
+    function toggleChapter(show) {
+      document.getElementById('chapter-field').style.opacity = show ? '1' : '0.3';
+    }
+  </script>
 </body>
 </html>
