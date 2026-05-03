@@ -136,3 +136,16 @@ def get_exchanges(conn, session_id: int):
     return conn.execute(
         "SELECT * FROM exchanges WHERE session_id = ? ORDER BY seq", (session_id,)
     ).fetchall()
+
+
+def remove_book(conn, book_id: int) -> None:
+    session_ids = [r[0] for r in conn.execute(
+        "SELECT id FROM sessions WHERE book_id = ?", (book_id,)
+    ).fetchall()]
+    for sid in session_ids:
+        conn.execute("DELETE FROM exchanges WHERE session_id = ?", (sid,))
+    conn.execute("DELETE FROM sessions WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM progress WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM chapters WHERE book_id = ?", (book_id,))
+    conn.execute("DELETE FROM books WHERE id = ?", (book_id,))
+    conn.commit()

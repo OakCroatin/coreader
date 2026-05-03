@@ -1,7 +1,7 @@
 import click
 from pathlib import Path
 from coreader.config import ensure_dirs, BOOKS_DIR
-from coreader.db import get_connection, init_db, add_book, add_chapter, get_book_by_title, list_books, get_progress, get_chapter_count
+from coreader.db import get_connection, init_db, add_book, add_chapter, get_book_by_title, list_books, get_progress, get_chapter_count, remove_book
 from coreader.ingest import extract_chapters
 from coreader.session import run_checkin_session
 from coreader.synthesizer import run_compare_session
@@ -55,6 +55,23 @@ def add(file: Path):
         add_chapter(conn, book_id=book_id, number=ch["number"], title=ch["title"], text=ch["text"])
 
     click.echo(f"Added '{title}' with {len(chapters)} chapters.")
+
+
+@cli.command()
+@click.argument("title")
+def remove(title: str):
+    """Remove a book and all its sessions from the database."""
+    conn = get_connection()
+    init_db(conn)
+
+    book = get_book_by_title(conn, title)
+    if not book:
+        click.echo(f"Book '{title}' not found.")
+        return
+
+    click.confirm(f"Remove '{title}' and all its sessions? This cannot be undone.", abort=True)
+    remove_book(conn, book["id"])
+    click.echo(f"Removed '{title}'.")
 
 
 @cli.command()
