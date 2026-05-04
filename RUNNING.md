@@ -75,6 +75,28 @@ Type `done` to end the session.
 coreader status
 ```
 
+## Web UI
+
+Start the browser-based interface with:
+
+```bash
+coreader serve
+```
+
+Then open `http://localhost:8000` in your browser.
+
+Options:
+```bash
+coreader serve --port 9000         # use a different port
+coreader serve --host 0.0.0.0      # bind to all interfaces
+```
+
+The web UI lets you browse your library, start checkin and compare sessions, and chat with the AI — all from the browser. The CLI commands continue to work normally alongside it.
+
+> Note: Ollama must be running (`ollama serve`) for sessions to work.
+
+---
+
 ## Configuration
 
 To use a different Ollama model, create `~/.coreader/config.toml`:
