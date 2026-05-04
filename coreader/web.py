@@ -262,3 +262,7 @@ def create_app(conn=None) -> FastAPI:
         return JSONResponse({"status": "ok"})
 
     return app
+
+
+# Module-level app instance used by `coreader serve` and uvicorn
+app = create_app()

@@ -13,6 +13,7 @@ The ASCII banner is printed on every command invocation via the cli() group.
 
 import pyfiglet
 import click
+import uvicorn
 from pathlib import Path
 from coreader.config import ensure_dirs, BOOKS_DIR, load_model, save_model
 from coreader.db import get_connection, init_db, add_book, add_chapter, get_book_by_title, list_books, get_progress, get_chapter_count, remove_book
@@ -223,6 +224,22 @@ def model():
     selected = models[int(choice) - 1]
     save_model(selected)
     click.echo(f"Model set to '{selected}'.")
+
+
+@cli.command()
+@click.option("--port", default=8000, show_default=True, help="Port to listen on.")
+@click.option("--host", default="127.0.0.1", show_default=True, help="Host to bind to.")
+def serve(port: int, host: str):
+    """Launch the Co-Reader web UI in your browser.
+
+    \b
+    Example:
+      coreader serve
+      coreader serve --port 9000
+    """
+    click.echo(f"Starting Co-Reader web UI at http://{host}:{port}")
+    click.echo("Press Ctrl+C to stop.\n")
+    uvicorn.run("coreader.web:app", host=host, port=port, reload=False)
 
 
 @cli.command()
