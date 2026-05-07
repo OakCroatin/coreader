@@ -108,8 +108,10 @@ def add_book(conn, title: str, author: str, book_type: str, file_path: str) -> i
 
 
 def get_book_by_title(conn, title: str):
-    """Return the book row matching the exact title, or None if not found."""
-    return conn.execute("SELECT * FROM books WHERE title = ?", (title,)).fetchone()
+    """Return the book row matching the title (case-insensitive), or None if not found."""
+    return conn.execute(
+        "SELECT * FROM books WHERE title = ? COLLATE NOCASE", (title,)
+    ).fetchone()
 
 
 def list_books(conn):

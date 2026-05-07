@@ -81,7 +81,7 @@ def add(file: Path):
     if not file.is_absolute() and not file.exists():
         file = BOOKS_DIR / file
     if not file.exists():
-        click.echo(f"File not found: {file}\nDrop your book into ~/.coreader/books/ and try again.")
+        click.echo(f"File not found: {file}\nDrop your book into {BOOKS_DIR}/ and try again.")
         return
     conn = get_connection()
     init_db(conn)
@@ -124,6 +124,11 @@ def remove(title: str):
     book = get_book_by_title(conn, title)
     if not book:
         click.echo(f"Book '{title}' not found.")
+        books = list_books(conn)
+        if books:
+            click.echo("Available books:")
+            for b in books:
+                click.echo(f"  {b['title']}")
         return
 
     click.confirm(f"Remove '{title}' and all its sessions? This cannot be undone.", abort=True)
@@ -149,7 +154,14 @@ def checkin(title: str, chapter: int):
 
     book = get_book_by_title(conn, title)
     if not book:
-        click.echo(f"Book '{title}' not found. Run 'coreader add' first.")
+        click.echo(f"Book '{title}' not found.")
+        books = list_books(conn)
+        if books:
+            click.echo("Available books:")
+            for b in books:
+                click.echo(f"  {b['title']}")
+        else:
+            click.echo("No books added yet. Run 'coreader add' first.")
         return
 
     run_checkin_session(
@@ -176,6 +188,11 @@ def compare(title: str):
     book = get_book_by_title(conn, title)
     if not book:
         click.echo(f"Book '{title}' not found.")
+        books = list_books(conn)
+        if books:
+            click.echo("Available books:")
+            for b in books:
+                click.echo(f"  {b['title']}")
         return
 
     run_compare_session(conn=conn, book_id=book["id"], book_title=book["title"])
